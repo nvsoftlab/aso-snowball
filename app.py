@@ -24,10 +24,12 @@ DELAY_SECONDS = 0.5
 TIMEOUT_SECONDS = 10
 LATIN_ALPHABET = list(string.ascii_lowercase)
 UKRAINIAN_CYRILLIC_ALPHABET = list("абвгґдеєжзиіїйклмнопрстуфхцчшщьюя")
+RUSSIAN_CYRILLIC_ALPHABET = list("абвгдеёжзийклмнопрстуфхцчшщъыьэюя")
 SNOWBALL_ALPHABET_MODES = [
     "Auto (detect from seed)",
     "Latin a-z",
     "Ukrainian Cyrillic",
+    "Russian Cyrillic",
 ]
 
 HEADERS = {
@@ -56,11 +58,18 @@ LOCALES = [
     {"label": "Greece - Greek", "country": "gr", "language": "el-GR", "storefront": "143448"},
     {"label": "Hungary - Hungarian", "country": "hu", "language": "hu-HU", "storefront": "143482"},
     {"label": "Indonesia - Indonesian", "country": "id", "language": "id-ID", "storefront": "143476"},
+    {"label": "Norway - Norwegian", "country": "no", "language": "no-NO", "storefront": "143457"},
     {"label": "Poland - Polish", "country": "pl", "language": "pl-PL", "storefront": "143478"},
+    {"label": "Portugal - Portuguese", "country": "pt", "language": "pt-PT", "storefront": "143453"},
+    {"label": "Romania - Romanian", "country": "ro", "language": "ro-RO", "storefront": "143487"},
+    {"label": "Russia - Russian", "country": "ru", "language": "ru-RU", "storefront": "143469"},
+    {"label": "Slovakia - Slovak", "country": "sk", "language": "sk-SK", "storefront": "143496"},
     {"label": "Ukraine - Ukrainian", "country": "ua", "language": "uk-UA", "storefront": "143492"},
     {"label": "Netherlands - Dutch", "country": "nl", "language": "nl-NL", "storefront": "143452"},
     {"label": "Brazil - Portuguese", "country": "br", "language": "pt-BR", "storefront": "143503"},
     {"label": "Mexico - Spanish", "country": "mx", "language": "es-MX", "storefront": "143468"},
+    {"label": "Sweden - Swedish", "country": "se", "language": "sv-SE", "storefront": "143456"},
+    {"label": "Turkey - Turkish", "country": "tr", "language": "tr-TR", "storefront": "143480"},
     {"label": "Japan - Japanese", "country": "jp", "language": "ja-JP", "storefront": "143462"},
     {"label": "Korea - Korean", "country": "kr", "language": "ko-KR", "storefront": "143466"},
 ]
@@ -79,13 +88,21 @@ def contains_cyrillic(text: str) -> bool:
     return any("\u0400" <= character <= "\u04ff" for character in text)
 
 
-def get_snowball_alphabet(seed_keyword: str, alphabet_mode: str) -> tuple[list[str], str]:
+def get_snowball_alphabet(
+    seed_keyword: str,
+    alphabet_mode: str,
+    locale: dict[str, str],
+) -> tuple[list[str], str]:
     if alphabet_mode == "Latin a-z":
         return LATIN_ALPHABET, "Latin a-z"
     if alphabet_mode == "Ukrainian Cyrillic":
         return UKRAINIAN_CYRILLIC_ALPHABET, "Ukrainian Cyrillic"
+    if alphabet_mode == "Russian Cyrillic":
+        return RUSSIAN_CYRILLIC_ALPHABET, "Russian Cyrillic"
 
     if contains_cyrillic(seed_keyword):
+        if locale["language"].startswith("ru"):
+            return RUSSIAN_CYRILLIC_ALPHABET, "Russian Cyrillic (auto)"
         return UKRAINIAN_CYRILLIC_ALPHABET, "Ukrainian Cyrillic (auto)"
     return LATIN_ALPHABET, "Latin a-z (auto)"
 
@@ -204,7 +221,7 @@ def build_keyword_list(
         )
         return sorted(keywords), errors
 
-    alphabet, alphabet_label = get_snowball_alphabet(seed_keyword, alphabet_mode)
+    alphabet, alphabet_label = get_snowball_alphabet(seed_keyword, alphabet_mode, locale)
     status.info(f"Using snowball alphabet: {alphabet_label}")
     time.sleep(DELAY_SECONDS)
 
